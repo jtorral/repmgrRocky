@@ -38,10 +38,10 @@ Notice how they end in -1, -2 and -3
 These numbers are used to identify which container will be the initial primary db server. As you guessed it, the server ending in -1 will be the primary.
 sed on the role and server name, primary or standby, config files willbe created and commands executed.
 
-Security fo rthis is minimal since this is a playground. Passwords are the same as the usernames.
+Security for this is minimal since this is a playground. Passwords are the same as the usernames.
 
-postgres user password is 'postgres'
-repmgr user password is 'repmgr'
+* postgres user password is 'postgres'
+* repmgr user password is 'repmgr'
 
 Additionally, a .pgpass file is created with a minimum of 6 entries based on the server name you create.
 
@@ -78,7 +78,6 @@ docker run -p 6433:5432 --env=PGPASSWORD=postgres -v pgdemo-2:/pgdata --network=
 
 The above will run two containers **pgdemo-1** and **pgdemo-2** on two different ports for postgres. **6432** for pgdemo-1 and **6433** for pgdemo-2
 
-```
 
 **Always start the first node first and wait for it to be running before starting others**
 
