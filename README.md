@@ -66,11 +66,15 @@ For example
 
 **pgdemo-1**
 
-```docker run -p 6432:5432 --env=PGPASSWORD=postgres -v pgdemo-1:/pgdata --network=pgnet --hostname=pgdemo-1 --shm-size=1g --name=pgdemo-1 -d repmgr_rocky8```
+```
+docker run -p 6432:5432 --env=PGPASSWORD=postgres -v pgdemo-1:/pgdata --network=pgnet --hostname=pgdemo-1 --shm-size=1g --name=pgdemo-1 -d repmgr_rocky8
+```
 
 **pgdemo-2**
 
-```docker run -p 6433:5432 --env=PGPASSWORD=postgres -v pgdemo-2:/pgdata --network=pgnet --hostname=pgdemo-2 --shm-size=1g --name=pgdemo-2 -d repmgr_rocky8```
+```
+docker run -p 6433:5432 --env=PGPASSWORD=postgres -v pgdemo-2:/pgdata --network=pgnet --hostname=pgdemo-2 --shm-size=1g --name=pgdemo-2 -d repmgr_rocky8
+```
 
 The above will run two containers **pgdemo-1** and **pgdemo-2** on two different ports for postgres. **6432** for pgdemo-1 and **6433** for pgdemo-2
 
@@ -135,9 +139,11 @@ INFO: standby registration complete
 NOTICE: standby node "pgdemo-2" (ID: 2) successfully registered
 ```
 
-At this point we can add more modes if needed keeping in mind the port numbers and names
+At this point we can add more nodes if needed, keeping in mind the port numbers and names
 
 ### Some basic commands ....
+
+**Show cluster info**
 
 ```
 [postgres@pgdemo-1 ~]$ repmgr -f /etc/repmgr.conf cluster show
