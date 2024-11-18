@@ -82,11 +82,29 @@ The above will run two containers **pgdemo-1** and **pgdemo-2** on two different
 
 **Always start the first node first and wait for it to be running before starting others**
 
+### Special note !!!
 
-jtorral@jt-x1:/GitStuff/repmgrRocky$ docker ps
-CONTAINER ID   IMAGE           COMMAND                  CREATED          STATUS          PORTS                                                                                  NAMES
-70b3a407f690   repmgr_rocky8   "/bin/bash -c /entry…"   10 minutes ago   Up 10 minutes   80/tcp, 0.0.0.0:6433->5432/tcp, [::]:6433->5432/tcp                                    pgdemo-2
-680b87a508a0   repmgr_rocky8   "/bin/bash -c /entry…"   11 minutes ago   Up 11 minutes   80/tcp, 0.0.0.0:6432->5432/tcp, [::]:6432->5432/tcp                                    pgdemo-1
+if you start the 2nd or 3rd or anytother containr like described above for pgdemo-2, it will automatically set itself up as a replica of the first continer with a name ending in -1
+
+**HOWEVER**
+
+If you start the container and specify the environment variable STREAMFROM like this ...
+
+```
+docker run -p 6434:5432 --env=PGPASSWORD=postgres --env=STREAMFROM=pgdemo-2 -v pgdemo-3:/pgdata --network=pgnet --hostname=pgdemo-3 --shm-size=1g --name=pgdemo-3 -d repmgr_rocky8
+```
+
+It will set itself up as a replica of the node defined by STREAMFROM.
+
+
+```
+docker ps
+
+CONTAINER ID   IMAGE           COMMAND                  CREATED         STATUS         PORTS                                                                                  NAMES
+44109c70905f   repmgr_rocky8   "/bin/bash -c /entry…"   7 minutes ago   Up 7 minutes   80/tcp, 0.0.0.0:6434->5432/tcp, [::]:6434->5432/tcp                                    pgdemo-3
+77dc67083dec   repmgr_rocky8   "/bin/bash -c /entry…"   8 minutes ago   Up 8 minutes   80/tcp, 0.0.0.0:6433->5432/tcp, [::]:6433->5432/tcp                                    pgdemo-2
+67538a88651b   repmgr_rocky8   "/bin/bash -c /entry…"   8 minutes ago   Up 8 minutes   80/tcp, 0.0.0.0:6432->5432/tcp, [::]:6432->5432/tcp                                    pgdemo-1
+
 ```
 
 ### What happened ?
@@ -141,9 +159,35 @@ NOTICE: standby node "pgdemo-2" (ID: 2) successfully registered
 
 At this point we can add more nodes if needed, keeping in mind the port numbers and names
 
+In this case we added pgdemo-3 streaming from pgdemo-2
+
+
+```
+.
+.
+.
+INFO: executing:
+  pg_basebackup -l "repmgr base backup"  -D /pgdata/16/data -h pgdemo-2 -p 5432 -U repmgr -X stream --checkpoint=fast
+NOTICE: standby clone (using pg_basebackup) complete
+NOTICE: you can now start your PostgreSQL server
+HINT: for example: pg_ctl -D /pgdata/16/data start
+HINT: after starting the server, you need to register this standby with "repmgr standby register"
+waiting for server to start....2024-11-18 07:13:42.403 UTC [] [29]: [1-1] user=,db=,host= LOG:  redirecting log output to logging collector process
+2024-11-18 07:13:42.403 UTC [] [29]: [2-1] user=,db=,host= HINT:  Future log output will appear in directory "log".
+ done
+server started
+INFO: connecting to local node "pgdemo-3" (ID: 3)
+INFO: connecting to primary database
+INFO: standby registration complete
+NOTICE: standby node "pgdemo-3" (ID: 3) successfully registered
+```
+
+
+
+
 ### Some basic commands ....
 
-**Show cluster info**
+**Show cluster info from inside a container**
 
 ```
 [postgres@pgdemo-1 ~]$ repmgr -f /etc/repmgr.conf cluster show
@@ -153,6 +197,20 @@ At this point we can add more nodes if needed, keeping in mind the port numbers 
  1  | pgdemo-1 | primary | * running |          | default  | 100      | 1        | host=pgdemo-1 user=repmgr password=repmgr dbname=repmgr connect_timeout=2
  2  | pgdemo-2 | standby |   running | pgdemo-1 | default  | 100      | 1        | host=pgdemo-2 user=repmgr password=repmgr dbname=repmgr connect_timeout=2
 ```
+
+**Show cluster info from outside a container (container host)**
+
+```                                                                                                                                                                                                                
+docker exec -it pgdemo-1 sudo -u postgres /usr/pgsql-16/bin/repmgr -f /etc/repmgr.conf cluster show
+
+ ID | Name     | Role    | Status    | Upstream | Location | Priority | Timeline | Connection string                                                        
+----+----------+---------+-----------+----------+----------+----------+----------+---------------------------------------------------------------------------
+ 1  | pgdemo-1 | primary | * running |          | default  | 100      | 1        | host=pgdemo-1 user=repmgr password=repmgr dbname=repmgr connect_timeout=2
+ 2  | pgdemo-2 | standby |   running | pgdemo-1 | default  | 100      | 1        | host=pgdemo-2 user=repmgr password=repmgr dbname=repmgr connect_timeout=2
+ 3  | pgdemo-3 | standby |   running | pgdemo-2 | default  | 100      | 1        | host=pgdemo-3 user=repmgr password=repmgr dbname=repmgr connect_timeout=2
+
+```
+
 
 
 More info coming soon ......

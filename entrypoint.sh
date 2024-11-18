@@ -24,7 +24,7 @@ then
         ### If it's a primary, init the db otherwise, don't populate data dir for repmgr to setup clone
         if [ $role -eq 1 ]; then
 
-	   sudo -u postgres /usr/pgsql-16/bin/initdb -D /pgdata/16/data
+           sudo -u postgres /usr/pgsql-16/bin/initdb -D /pgdata/16/data
            echo "include = 'pg_custom.conf'" >> /pgdata/16/data/postgresql.conf
 
            cp /pg_custom.conf /pgdata/16/data/
@@ -37,10 +37,10 @@ then
            ###  Start postgres and create some roles and voodoo
    
            sudo -u postgres /usr/pgsql-16/bin/pg_ctl -D /pgdata/16/data start
-	   sudo -u postgres psql -c "ALTER ROLE postgres PASSWORD 'postgres';"
-	   sudo -u postgres psql -c "CREATE ROLE repmgr WITH SUPERUSER LOGIN PASSWORD 'repmgr';"
-	   sudo -u postgres psql -c 'ALTER USER repmgr SET search_path TO repmgr, "$user", public;' 
-	   sudo -u postgres psql -c "CREATE DATABASE repmgr WITH OWNER repmgr;"
+           sudo -u postgres psql -c "ALTER ROLE postgres PASSWORD 'postgres';"
+           sudo -u postgres psql -c "CREATE ROLE repmgr WITH SUPERUSER LOGIN PASSWORD 'repmgr';"
+           sudo -u postgres psql -c 'ALTER USER repmgr SET search_path TO repmgr, "$user", public;' 
+           sudo -u postgres psql -c "CREATE DATABASE repmgr WITH OWNER repmgr;"
        fi
 
         ### --- Lets create pgpass for repmgr to use. Pre populate with a few nodes
@@ -65,13 +65,16 @@ then
 
         ### --- If its a standby, lets clone it form the primary
         if [ $role -gt 1 ]; then
-           sudo -u postgres /usr/pgsql-16/bin/repmgr -h $primaryHost -U repmgr -d repmgr -f /etc/repmgr.conf standby clone
-
-           ### --- Need to start postgres afterwards
-           sudo -u postgres /usr/pgsql-16/bin/pg_ctl -D /pgdata/16/data start
-
-           ### --- Now register the new standby
-           sudo -u postgres /usr/pgsql-16/bin/repmgr -f /etc/repmgr.conf standby register
+           if [ -z "${STREAMFROM}" ]; then
+              sudo -u postgres /usr/pgsql-16/bin/repmgr -h $primaryHost -U repmgr -d repmgr -f /etc/repmgr.conf standby clone
+              sudo -u postgres /usr/pgsql-16/bin/pg_ctl -D /pgdata/16/data start
+              sudo -u postgres /usr/pgsql-16/bin/repmgr -f /etc/repmgr.conf standby register
+           else
+              upstreamId=$(echo $STREAMFROM | cut -f2 -d "-")
+              sudo -u postgres /usr/pgsql-16/bin/repmgr -h $STREAMFROM -U repmgr -d repmgr -f /etc/repmgr.conf --upstream-node-id=$upstreamId standby clone
+              sudo -u postgres /usr/pgsql-16/bin/pg_ctl -D /pgdata/16/data start
+              sudo -u postgres /usr/pgsql-16/bin/repmgr -f /etc/repmgr.conf --upstream-node-id=$upstreamId standby register
+           fi
         fi
 
 else
