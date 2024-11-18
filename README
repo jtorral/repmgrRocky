@@ -1,0 +1,13 @@
+#### To build the images, run ...
+
+docker build -t repmgr_rocky8
+
+#### To run the container ...
+
+docker run -p 5432:5432 -v pg16-1-rocky-pgdata:/pgdata --name=pg16-1-rocky -d pg16
+
+#### To run and attache to a specific netwrork
+
+docker run -p 6432:5432 --env=PGPASSWORD=postgres -v repmgr-1:/pgdata --network=pgnet --hostname=repmgr-1 --shm-size=1g --name=repmgr-1 -d repmgr_rocky8
+
+docker run -p 6433:5432 --env=PGPASSWORD=postgres -v repmgr-2:/pgdata --network=pgnet --hostname=repmgr-2 --shm-size=1g --name=repmgr-2 -d repmgr_rocky8
