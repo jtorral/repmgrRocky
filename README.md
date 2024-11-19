@@ -11,6 +11,8 @@ as a way to help get started and understanding the trechnology. With that said, 
 
 ## TL;DR;
 
+**Note: ssh keys in this rep are ok to be public here since they are for using inside your docker container for testing only.**
+
 ### Clone the repo to your local machine
 
 ```git clone git@github.com:jtorral/repmgrRocky.git```
