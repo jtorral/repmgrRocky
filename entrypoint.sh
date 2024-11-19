@@ -2,6 +2,7 @@
 
 if [ ! -f "/pgdata/16/data/PG_VERSION" ]
 then 
+
         thisHost=$(hostname)
 
         ### role of db baseded on hostname
@@ -15,6 +16,7 @@ then
         echo -e "conninfo='host=$thisHost user=repmgr password=repmgr dbname=repmgr connect_timeout=2' " >> /etc/repmgr.conf
         echo -e "data_directory='/pgdata/16/data'" >> /etc/repmgr.conf
         echo -e "pg_basebackup_options='--checkpoint=fast'" >> /etc/repmgr.conf
+        echo -e "pg_bindir='/usr/pgsql-16/bin/'" >> /etc/repmgr.conf
 
         cp /pgsqlProfile /var/lib/pgsql/.pgsql_profile
         chmod 666 /etc/repmgr.conf
@@ -82,5 +84,24 @@ else
 
         sudo -u postgres /usr/pgsql-16/bin/pg_ctl -D /pgdata/16/data start
 fi
+
+cp /id_rsa /var/lib/pgsql/.ssh/
+cp /id_rsa.pub /var/lib/pgsql/.ssh/
+cp /authorized_keys /var/lib/pgsql/.ssh/
+
+chown -R postgres:postgres /var/lib/pgsql/.ssh
+chmod 600 /var/lib/pgsql/.ssh/id_rsa
+chmod 644 /var/lib/pgsql/.ssh/id_rsa.pub
+chmod 644 /var/lib/pgsql/.ssh/authorized_keys
+
+ssh-keygen -t rsa -f /etc/ssh/ssh_host_rsa_key -N ''
+ssh-keygen -t dsa -f /etc/ssh/ssh_host_ecdsa_key -N ''
+ssh-keygen -t ed25519 -f /etc/ssh/ssh_host_ed25519_key -N ''
+
+echo "StrictHostKeyChecking no" >> /etc/ssh/ssh_config
+
+/usr/sbin/sshd
+
+rm -f /run/nologin
 
 exec tail -f /dev/null
