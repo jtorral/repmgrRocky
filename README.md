@@ -38,6 +38,12 @@ Notice how they end in -1, -2 and -3
 These numbers are used to identify which container will be the initial primary db server. As you guessed it, the server ending in -1 will be the primary.
 sed on the role and server name, primary or standby, config files willbe created and commands executed.
 
+**Immportant!**
+
+**Now that you know the naming convention, make sure you use no hyphens in the node name other than at the end to give it a unique name like buuba-3**
+
+
+
 Security for this is minimal since this is a playground. Passwords are the same as the usernames.
 
 * postgres user password is 'postgres'
